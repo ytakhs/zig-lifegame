@@ -36,7 +36,7 @@ const Lifegame = struct {
     }
 
     pub fn render(self: *Self) void {
-        std.debug.print("\x1b[0;1H", .{});
+        std.debug.print("\x1b[0;0H", .{});
 
         for (self.grid.items) |row| {
             for (row.items) |el| {
