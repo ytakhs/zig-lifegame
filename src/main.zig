@@ -9,7 +9,18 @@ const Lifegame = struct {
     const Self = @This();
 
     pub fn init(alloc: std.mem.Allocator, row: usize, col: usize) !Self {
-        const grid = try std.ArrayList(std.ArrayList(bool)).initCapacity(alloc, row);
+        var grid = std.ArrayList(std.ArrayList(bool)).init(alloc);
+        var r: usize = 0;
+        while (r < row) : (r += 1) {
+            var a = std.ArrayList(bool).init(alloc);
+            var c: usize = 0;
+            while (c < col) : (c += 1) {
+                const v = std.crypto.random.int(usize) % 10 == 0;
+                try a.append(v);
+            }
+
+            try grid.append(a);
+        }
 
         return Self{
             .alloc = alloc,
@@ -20,6 +31,10 @@ const Lifegame = struct {
     }
 
     pub fn deinit(self: *Self) void {
+        for (self.grid.items) |row| {
+            row.deinit();
+        }
+
         self.grid.deinit();
     }
 };
