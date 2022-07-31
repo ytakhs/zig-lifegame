@@ -36,6 +36,8 @@ const Lifegame = struct {
     }
 
     pub fn render(self: *Self) void {
+        std.debug.print("\x1b[0;1H", .{});
+
         for (self.grid.items) |row| {
             for (row.items) |el| {
                 if (el) {
@@ -46,6 +48,58 @@ const Lifegame = struct {
             }
 
             std.debug.print("\n", .{});
+        }
+    }
+
+    pub fn update(self: *Self) !void {
+        var new = try initGrid(self.alloc, self.row, self.col);
+
+        for (new.items) |row, i| {
+            for (row.items) |*el, j| {
+                el.* = self.deriveState(i, j);
+            }
+        }
+
+        self.deinit();
+        self.grid = new;
+    }
+
+    fn deriveState(self: *Self, r: usize, c: usize) bool {
+        const row = @intCast(i32, r);
+        const col = @intCast(i32, c);
+
+        var state = self.countNeighbor(row - 1, col - 1) +
+            self.countNeighbor(row - 1, col) +
+            self.countNeighbor(row - 1, col + 1) +
+            self.countNeighbor(row, col - 1) +
+            self.countNeighbor(row, col + 1) +
+            self.countNeighbor(row + 1, col - 1) +
+            self.countNeighbor(row + 1, col) +
+            self.countNeighbor(row + 1, col + 1);
+
+        switch (state) {
+            2 => return self.grid.items[r].items[c],
+            3 => return true,
+            else => return false,
+        }
+    }
+
+    fn countNeighbor(self: *Self, row: i32, col: i32) usize {
+        if (row < 0 or self.row <= row) {
+            return 0;
+        }
+
+        if (col < 0 or self.col <= col) {
+            return 0;
+        }
+
+        const r = @intCast(usize, row);
+        const c = @intCast(usize, col);
+
+        if (self.grid.items[r].items[c]) {
+            return 1;
+        } else {
+            return 0;
         }
     }
 
@@ -67,10 +121,16 @@ const Lifegame = struct {
 };
 
 pub fn main() anyerror!void {
-    var lg = try Lifegame.init(std.heap.page_allocator, 10, 10);
+    var lg = try Lifegame.init(std.heap.page_allocator, 100, 100);
     defer lg.deinit();
 
     lg.render();
+
+    while (true) {
+        std.time.sleep(1000 * 1000 * 500);
+        try lg.update();
+        lg.render();
+    }
 }
 
 test "basic test" {
