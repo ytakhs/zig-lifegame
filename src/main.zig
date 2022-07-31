@@ -9,18 +9,7 @@ const Lifegame = struct {
     const Self = @This();
 
     pub fn init(alloc: std.mem.Allocator, row: usize, col: usize) !Self {
-        var grid = std.ArrayList(std.ArrayList(bool)).init(alloc);
-        var r: usize = 0;
-        while (r < row) : (r += 1) {
-            var a = std.ArrayList(bool).init(alloc);
-            var c: usize = 0;
-            while (c < col) : (c += 1) {
-                const v = std.crypto.random.int(usize) % 10 == 0;
-                try a.append(v);
-            }
-
-            try grid.append(a);
-        }
+        var grid = try initGrid(alloc, row, col);
 
         return Self{
             .alloc = alloc,
@@ -37,13 +26,44 @@ const Lifegame = struct {
 
         self.grid.deinit();
     }
+
+    pub fn render(self: *Self) void {
+        for (self.grid.items) |row| {
+            for (row.items) |el| {
+                if (el) {
+                    std.debug.print("{s}", .{"■"});
+                } else {
+                    std.debug.print("{s}", .{" "});
+                }
+            }
+
+            std.debug.print("\n", .{});
+        }
+    }
+
+    fn initGrid(alloc: std.mem.Allocator, row: usize, col: usize) !std.ArrayList(std.ArrayList(bool)) {
+        var grid = std.ArrayList(std.ArrayList(bool)).init(alloc);
+        var r: usize = 0;
+        while (r < row) : (r += 1) {
+            var a = std.ArrayList(bool).init(alloc);
+            var c: usize = 0;
+            while (c < col) : (c += 1) {
+                const v = std.crypto.random.int(usize) % 10 == 0;
+                try a.append(v);
+            }
+
+            try grid.append(a);
+        }
+
+        return grid;
+    }
 };
 
 pub fn main() anyerror!void {
     var lg = try Lifegame.init(std.heap.page_allocator, 10, 10);
     defer lg.deinit();
 
-    std.log.info("All your codebase are belong to us.", .{});
+    lg.render();
 }
 
 test "basic test" {
