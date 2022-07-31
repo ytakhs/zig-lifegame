@@ -1,8 +1,33 @@
 const std = @import("std");
 
+const Lifegame = struct {
+    alloc: std.mem.Allocator,
+    row: usize,
+    col: usize,
+    grid: std.ArrayList(std.ArrayList(bool)),
+
+    const Self = @This();
+
+    pub fn init(alloc: std.mem.Allocator, row: usize, col: usize) !Self {
+        const grid = try std.ArrayList(std.ArrayList(bool)).initCapacity(alloc, row);
+
+        return Self{
+            .alloc = alloc,
+            .row = row,
+            .col = col,
+            .grid = grid,
+        };
+    }
+
+    pub fn deinit(self: *Self) void {
+        self.grid.deinit();
+    }
+};
+
 pub fn main() anyerror!void {
-    // Note that info level log messages are by default printed only in Debug
-    // and ReleaseSafe build modes.
+    var lg = try Lifegame.init(std.heap.page_allocator, 10, 10);
+    defer lg.deinit();
+
     std.log.info("All your codebase are belong to us.", .{});
 }
 
